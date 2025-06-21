@@ -178,7 +178,7 @@ fun SplashScreen(navController: NavController, onFinished: () -> Unit) {
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Text(
-                    text = "Made with ❤️ Love",
+                    text = "Made with ❤️ by Moonstone",
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Light
@@ -312,7 +312,7 @@ fun Lottiequestion(
         }
 
         AlertDialog(
-            modifier = Modifier.height(250.dp).width(250.dp),
+            modifier = Modifier.height(200.dp).width(200.dp),
             onDismissRequest = onDismiss,
             buttons = {},
 

@@ -469,7 +469,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
                             .fillMaxWidth()
                             .padding(vertical = 6.dp, horizontal = 8.dp)
                             .clickable {
-                                Toast.makeText(context, "Question clicked", Toast.LENGTH_SHORT).show()
+                                //Toast.makeText(context, "Question clicked", Toast.LENGTH_SHORT).show()
                                 selectedQuestion = question
                             },
                         elevation = 4.dp,
@@ -695,8 +695,18 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Solution Video Link",
+                            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Medium)
+                            ,modifier = Modifier.clickable {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=leetcode+${selectedQuestion!!.leetnumber}+neetcode"))
+                                context.startActivity(intent)
+                            }
+                        )
                     }
-                },
+                }
+                ,
                 confirmButton = {
                     Row(
                         horizontalArrangement = Arrangement.End,
@@ -977,7 +987,9 @@ fun SignInScreenf(navController: NavController) {
                     }
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(context, "Error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Sign-in failed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Try again", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1048,7 +1060,7 @@ fun SignInScreenf(navController: NavController) {
 
             } else {
                 Text(
-                    text = "Welcome, !!",
+                    text = "Welcome, $userName!!",
                     style = MaterialTheme.typography.h4,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF145ACB)
