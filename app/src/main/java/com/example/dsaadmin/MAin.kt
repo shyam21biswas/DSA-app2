@@ -93,6 +93,7 @@ import java.util.Locale
 import androidx.compose.material3.Button
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.dsaadmin.UserPreferences.storename
+import com.example.dsaadmin.UserPreferences.storeuid
 
 
 data class Company(
@@ -119,27 +120,18 @@ var load = true
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(navController: NavController, user: FirebaseUser?) {
-    val firestore = remember { FirebaseFirestore.getInstance() }
+
     var solvedaily by remember { mutableStateOf(false) }
-    //var solvechecker by remember { mutableStateOf(true) }
 
-    ///var companies by remember { mutableStateOf<List<Company>>(emptyList()) }
-    ///var selectedCompanyId by remember { mutableStateOf<String?>(null) }
-    ///var questions by remember { mutableStateOf<List<Question>>(emptyList()) }
-   // var questionStatusMap by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
-
-    ///var totalSolved by remember { mutableStateOf(0) }
-   /// var totalQuestions by remember { mutableStateOf(0) }
     var selectedQuestion by remember { mutableStateOf<Question?>(null) }
 
     //the is extra one
     var hasShownDialog by remember { mutableStateOf(false) }
-    val completedCompanyIds = remember { mutableStateMapOf<String, Boolean>() }
-    val completedCompanies = remember { mutableStateListOf<String>() }
+
 
     //for a particular question click
     var confirmCompletionQuestion by remember { mutableStateOf<Question?>(null) }
-    val coroutineScope = rememberCoroutineScope()
+
     var showStatsDialog by remember { mutableStateOf(false) }
     //both are used to take note
     var selectedQuestionNote by remember { mutableStateOf<Question?>(null) }
@@ -150,7 +142,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
 
     //curent date time
     val sdf = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
-    val currentTimestamp = sdf.format(Date())
+
 
     //view model for recent question solved
     val viewModel2: RecentSolvedViewModel = viewModel()
@@ -159,105 +151,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
     //check this....
 
     val context = LocalContext.current
-//
-//    // Load user's solved questions on login
-//    LaunchedEffect(user?.uid) {
-//        user?.let {
-//            // First, try loading from DataStore
-//            val cachedStatus = UserPreferences.loadQuestionsStatus(context)
-//            questionStatusMap = cachedStatus
-//
-//            // Then try syncing with Firestore
-//            try {
-//                val userDoc = firestore.collection("users").document(user.uid).get().await()
-//                val remoteStatus = userDoc.get("questionsStatus") as? Map<String, Boolean>
-//                if (remoteStatus != null) {
-//                    questionStatusMap = remoteStatus
-//                    saveQuestionsStatus(context, remoteStatus) // Cache it locally
-//                }
-//            } catch (e: Exception) {
-//                Log.e("Firestore", "Failed to fetch from Firestore", e)
-//            }
-//        }
-//    }
-//    // Load companies and their question counts from Firestore
-//    LaunchedEffect(questionStatusMap) {
-//        try {
-//            val companySnapshot = firestore.collection("companies").get().await()
-//
-//            if (companySnapshot.isEmpty) {
-//                companies = emptyList()
-//                return@LaunchedEffect
-//            }
-//
-//
-//            val companyList = mutableListOf<Company>()
-//            var solvedSum = 0
-//            var totalSum = 0
-//
-//            for (companyDoc in companySnapshot.documents) {
-//                val questionsSnapshot = firestore.collection("companies")
-//                    .document(companyDoc.id)
-//                    .collection("questions")
-//                    //.orderBy("uploadedAt", Query.Direction.DESCENDING) // ✅ fetch oldest first
-//                    .get()
-//                    .await()
-//
-//                val total = questionsSnapshot.size()
-//                val solved = questionsSnapshot.count { questionStatusMap[it.id] == true }
-//
-//                val name = companyDoc.getString("name") ?: "Unknown"
-//                val logoUrl = companyDoc.getString("logoUrl") ?: ""
-//
-//                val company = Company(
-//                    id = companyDoc.id,
-//                    name = name,
-//                    logoUrl = logoUrl,
-//                    solved = solved,
-//                    total = total
-//                )
-//
-//                companyList.add(company)
-//                solvedSum += solved
-//                totalSum += total
-//            }
-//
-//            companies = companyList
-//            totalSolved = solvedSum
-//            totalQuestions = totalSum
-//        } catch (e: Exception) {
-//            Log.e("Firestore", "Error loading companies", e)
-//        }
-//    }
-//
-//    // Fetch questions for selected company
-//    LaunchedEffect(selectedCompanyId, questionStatusMap) {
-//        if (selectedCompanyId == null) {
-//            questions = emptyList()
-//            return@LaunchedEffect
-//        }
-//
-//        val snapshot = firestore.collection("companies")
-//            .document(selectedCompanyId!!)
-//            .collection("questions")
-//            //.orderBy("leetnumber",Query.Direction.ASCENDING)
-//            .get()
-//            .await()
-//
-//        questions = snapshot.map { doc ->
-//            Question(
-//                id = doc.id,
-//                title = doc.getString("title") ?: "Untitled",
-//                link = doc.getString("link"),
-//                leetnumber = doc.getString("leetnumber"),
-//                //status = if (questionStatusMap[doc.id] == true) "Done" else "To Do",
-//
-//                tags = doc.get("tags") as? List<String> ?: emptyList(),
-//
-//                difficulty = doc.getString("difficulty") ?: "Unknown"
-//            )
-//        }
-//    }
+
 
 
 
@@ -287,10 +181,6 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
     }
 
 
-    // Load companies when questionStatusMap changes
-//    LaunchedEffect(questionStatusMap) {
-//        viewModel.loadCompanies()
-//    }
 
 
 
@@ -298,7 +188,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
 
     var load by remember { mutableStateOf(true) }
     val overallProgress = if (totalQuestions > 0) totalSolved.toFloat() / totalQuestions else 0f
-   // val context = LocalContext.current
+
     val userName by UserPreferences.getUserName(context).collectAsState("")
     Column(
         modifier = Modifier
@@ -311,9 +201,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
         {
             Lottiequestion(load, onDismiss = {load = false})
         }
-        // Overall progress card
-       // VibrantNameCard("hi Vedanshi")
-       // Spacer(modifier = Modifier.height(2.dp))
+
 
 
         Card(
@@ -375,7 +263,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
 
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(16.dp).wrapContentSize(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         AsyncImage(
@@ -390,7 +278,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
                             style = MaterialTheme.typography.body2
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        if (percentage < 1f) {
+                      /*  if (percentage < 1f) {
                             Canvas(modifier = Modifier.size(40.dp)) {
                                 drawArc(
                                     color = Color.Gray,
@@ -434,7 +322,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
                                     //completedCompanies.add(company.id)
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
             }
@@ -497,52 +385,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Tags and Difficulty
-                               /* Row(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
 
-                                        // Tag Chips
-                                        question.tags.take(2).forEach { tag ->
-                                            val chipColor = Color(0xFF020202)
-
-
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .background(
-                                                        chipColor,
-                                                        shape = RoundedCornerShape(16.dp)
-                                                    )
-                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                                            ) {
-                                                Text(
-                                                    text = tag,
-                                                    style = MaterialTheme.typography.caption,
-                                                    color = Color.White,
-
-                                                    )
-                                            }
-                                        }
-
-
-
-//                                        // Difficulty Label
-//                                        val (diffColor, diffText) = when (question.difficulty) {
-//                                            "Easy" -> Color(0xFF4CAF50) to "EASY"
-//                                            "Medium" -> Color(0xFFFFA000) to "MEDIUM"
-//                                            else -> Color(0xFFD32F2F) to "HARD"
-//                                        }
-//
-//                                        Text(
-//                                            text = diffText,
-//                                            color = diffColor,
-//                                            fontWeight = FontWeight.Bold,
-//                                            style = MaterialTheme.typography.subtitle2,
-//                                            modifier = Modifier.padding(start = 8.dp)
-//                                        )
-                                    }*/
                                 }
                             // Difficulty Label
 
@@ -577,19 +420,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
                                             confirmCompletionQuestion = question
 
                                         } else {
-//                                            // Directly unmark without confirmation
-//                                            questionStatusMap =
-//                                                questionStatusMap.toMutableMap().apply {
-//                                                    put(question.id, false)
-//                                                }
-//                                            user?.let {
-//                                                firestore.collection("users")
-//                                                    .document(user.uid)
-//                                                    .update("questionsStatus.${question.id}", false)
-//                                            }
-//                                            coroutineScope.launch {
-//                                                saveQuestionsStatus(context, questionStatusMap)
-//                                            }
+//
                                             viewModel.toggleQuestionStatus(question.id, false)
                                         }
                                     }
@@ -617,21 +448,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
                 .background(Color(0x66000000)) // semi-transparent dark backdrop
                 .clickable(enabled = false) {} // prevent clicks behind dialog
         ) {
-             //Glow Effect Box
-//            Box(
-//                modifier = Modifier
-//                    .align(Alignment.Center)
-//                    .size(300.dp)
-//                    .graphicsLayer {
-//                        shadowElevation = 50f
-//                        shape = RoundedCornerShape(20.dp)
-//                        clip = false
-//                    }
-//                    .background(
-//                        Color(0xFF4CAF50).copy(alpha = 0.7f),
-//                        shape = RoundedCornerShape(20.dp)
-//                    )
-//            )
+
             AlertDialog(
                 shape = RoundedCornerShape(16.dp),
 
@@ -730,24 +547,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
         }
     }
 
-    //when all question are solved ......
-//    if (hasShownDialog) {
-//        AlertDialog(
-//            shape = RoundedCornerShape(16.dp),
-//            onDismissRequest = { hasShownDialog = false },
-//            title = {
-//                Text("🎉 Congratulations!", fontWeight = FontWeight.Bold)
-//            },
-//            text = {
-//                Text("You’ve completed all questions from the Company Tag!\nTime to dominate those interviews. 💼🔥")
-//            },
-//            confirmButton = {
-//                TextButton(onClick = { hasShownDialog = false }) {
-//                    Text("Awesome! 🚀")
-//                }
-//            }
-//        )
-//    }
+
 
     if (hasShownDialog) {
         AlertDialog(
@@ -808,55 +608,7 @@ fun HomeScreen(navController: NavController, user: FirebaseUser?) {
 
 
 
-    //question click
-    //2. add a function that will show you the  last 5 question solved............
-//    if (confirmCompletionQuestion != null) {
-//
-//        AlertDialog(
-//            shape = RoundedCornerShape(16.dp),
-//            onDismissRequest = { confirmCompletionQuestion = null },
-//            title = { Text("Mark as Completed?") },
-//            text = { Text("Are you sure you’ve completed this question?") },
-//            confirmButton = {
-//                TextButton(onClick = {
-//
-//                    confirmCompletionQuestion?.let { question ->
-//                        questionStatusMap = questionStatusMap.toMutableMap().apply {
-//                            put(question.id, true)
-//                        }
-//
-//                        //RecentSolvedManager.addSolvedQuestion(question.title)
-//                        viewModel2.addSolvedQuestion(user!!.uid, question.title)
-//
-//                        user?.let {
-//                            firestore.collection("users")
-//                                .document(user.uid)
-//                                .update("questionsStatus.${question.id}", true)
-//                        }
-//                        coroutineScope.launch {
-//                            saveQuestionsStatus(context, questionStatusMap)
-//                        }
-//                    }
-//                    incrementTodaySolved(user!!.uid)
-//
-//
-//
-//                    confirmCompletionQuestion = null
-//
-//                    lastquestionsolved = true
-//
-//
-//                }) {
-//                    Text("Yes")
-//                }
-//            },
-//            dismissButton = {
-//                TextButton(onClick = { confirmCompletionQuestion = null }) {
-//                    Text("Cancel")
-//                }
-//            }
-//        )
-//    }
+
     if (confirmCompletionQuestion != null) {
         AlertDialog(
             shape = RoundedCornerShape(16.dp),
@@ -938,6 +690,9 @@ fun SignInScreenf(navController: NavController) {
     var userName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var navigateToHome by remember { mutableStateOf(false) }
+    val user = FirebaseAuth.getInstance().currentUser
+    val userNamestored by UserPreferences.getUserName(context).collectAsState("")
+    var uidd by remember { mutableStateOf<String?>("vinay_17") }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -953,12 +708,17 @@ fun SignInScreenf(navController: NavController) {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val user = auth.currentUser
+
                             userName = user?.displayName
+                            uidd = user?.uid
                             scope.launch {
                                 if(userName == null)
-                                    storename(context,"")
-                                else
+                                { storename(context,"")
+                                    storeuid(context,"vinay_17")}
+                                else {
                                     storename(context, userName!!)
+                                    storeuid(context, uidd!!)
+                                }
                             }
 
                             val firestore = FirebaseFirestore.getInstance()
@@ -1005,7 +765,7 @@ fun SignInScreenf(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            if (userName == null) {
+            if (userName == null ) {
                 Text(
                     text = "Welcome!",
                     style = MaterialTheme.typography.h3,
@@ -1060,7 +820,7 @@ fun SignInScreenf(navController: NavController) {
 
             } else {
                 Text(
-                    text = "Welcome, $userName!!",
+                    text = "Welcome, $userNamestored!!",
                     style = MaterialTheme.typography.h4,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF145ACB)
@@ -1074,7 +834,7 @@ fun SignInScreenf(navController: NavController) {
     if (navigateToHome) {
         LaunchedEffect(Unit) {
             delay(2000)
-            navController.navigate("home")
+            navController.navigate("scaffold")
             {popUpTo("signin") { inclusive = true }}
 
             navigateToHome = false
@@ -1177,18 +937,7 @@ fun ArchProgressBarWithInfo(
                                 modifier = Modifier.clickable { currvalur = true }
                             )
                     }
-//                    if(currvalur)
-//                    Text(
-//                        text = "${(progress * 100).toInt()}%",
-//                        fontSize = 24.sp,
-//                        fontWeight = FontWeight.Bold, modifier = Modifier.clickable { currvalur = false }
-//                    )
-//                    else
-//                    Text(
-//                        text = "$totalSolved / $totalQuestions",
-//                        fontSize = 24.sp,
-//                        fontWeight = FontWeight.Bold, modifier = Modifier.clickable { currvalur = true }
-//                    )
+
                 }
             }
 
@@ -1365,7 +1114,7 @@ fun StatsDialog(userId: String, onDismiss: () -> Unit) {
         ) {
 
 
-                //StatsScreen(userId = userId, onDismiss = onDismiss)
+
                 BarChartScreen(userId = userId, onDismiss = onDismiss)
 
 
@@ -1375,106 +1124,4 @@ fun StatsDialog(userId: String, onDismiss: () -> Unit) {
 
 
 
-
-@Composable
-fun CongratulationsDialog(hasShownDialog: Boolean, onDismiss: () -> Unit) {
-    if (hasShownDialog) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("Awesome! 🚀")
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Replace with your image
-                    Image(
-                        painter = painterResource(id = R.drawable.winner2),
-                        contentDescription = "Trophy",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = 16.dp)
-                    )
-                    Text(
-                        text = "🎉 Congratulations!",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You’ve completed all questions from the Company Tag!\nTime to dominate those interviews. 💼🔥",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            },
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-}
-
-@Composable
-fun MilestoneDialog(
-    showDialog: Boolean,
-    onDismiss: () -> Unit
-) {
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = {  },
-            confirmButton = {
-                TextButton(onClick = { }) {
-                    Text("Awesome!🚀" , fontSize = 20.sp , color = Color.Black , fontWeight = FontWeight.Bold ,)
-                }
-            },
-            backgroundColor = Color(0xFFABC9AA), // Match with image background 0xFFFFB74D
-
-             title = {
-                // Top Image Box
-                Box(
-                    //modifier = Modifier.fillMaxWidth()
-                        //.height(200.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.man4),
-                        contentDescription = "Milestone",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.height(125.dp).width(350.dp)
-                    )
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(0.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Top Image Bo
-
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "🎉 Congratulations!",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "You’ve completed all questions from the Company Tag!\nTime to dominate those interviews. 💼🔥",
-                        textAlign = TextAlign.Center,
-                        color = Color.Black
-                    )
-                }
-            },
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-}
 

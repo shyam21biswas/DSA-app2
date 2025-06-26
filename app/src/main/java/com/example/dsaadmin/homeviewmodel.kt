@@ -166,102 +166,7 @@ class HomeViewModel(private val user: FirebaseUser?) : ViewModel() {
         }
     }
 
-    //this 1st version to load question................
-    fun loadQuestionsForCompany2(companyId: String) {
-        viewModelScope.launch {
-            val cached = questionsCache[companyId]
-            if (cached != null) {
-                _questions.value = cached
-                return@launch
-            }
 
-            try {
-                val snapshot = firestore.collection("companies")
-                    .document(companyId)
-                    .collection("questions")
-                    .get()
-
-                    .await()
-
-                val fetchedQuestions = snapshot.map { doc ->
-                    Question(
-                        id = doc.id,
-                        title = doc.getString("title") ?: "",
-                        link = doc.getString("link"),
-                        leetnumber = doc.getString("leetnumber"),
-                        tags = doc.get("tags") as? List<String> ?: emptyList(),
-                        difficulty = doc.getString("difficulty") ?: "Unknown"
-                    )
-                }
-
-                questionsCache[companyId] = fetchedQuestions
-                _questions.value = fetchedQuestions
-            } catch (e: Exception) {
-                Log.e("Firestore", "Error loading questions", e)
-                _questions.value = emptyList()
-            }
-        }
-    }
-
-    //this is the second version to load question with offlice features
-    fun loadQuestionsForCompany3(companyId: String) {
-        viewModelScope.launch {
-            val cached = questionsCache[companyId]
-            if (cached != null) {
-                _questions.value = cached
-                return@launch
-            }
-
-            try {
-                // Force Firestore to use cache first
-                val snapshot = firestore.collection("companies")
-                    .document(companyId)
-                    .collection("questions")
-                    .get(Source.CACHE) // 👈 Try cache first
-                    .await()
-
-                if (!snapshot.isEmpty) {
-                    val fetchedQuestions = snapshot.map { doc ->
-                        Question(
-                            id = doc.id,
-                            title = doc.getString("title") ?: "",
-                            link = doc.getString("link"),
-                            leetnumber = doc.getString("leetnumber"),
-                            tags = doc.get("tags") as? List<String> ?: emptyList(),
-                            difficulty = doc.getString("difficulty") ?: "Unknown"
-                        )
-                    }
-
-                    questionsCache[companyId] = fetchedQuestions
-                    _questions.value = fetchedQuestions
-                } else {
-                    // Fallback to server only if cache is empty
-                    val fallbackSnapshot = firestore.collection("companies")
-                        .document(companyId)
-                        .collection("questions")
-                        .get(Source.SERVER)
-                        .await()
-
-                    val fetchedQuestions = fallbackSnapshot.map { doc ->
-                        Question(
-                            id = doc.id,
-                            title = doc.getString("title") ?: "",
-                            link = doc.getString("link"),
-                            leetnumber = doc.getString("leetnumber"),
-                            tags = doc.get("tags") as? List<String> ?: emptyList(),
-                            difficulty = doc.getString("difficulty") ?: "Unknown"
-                        )
-                    }
-
-                    questionsCache[companyId] = fetchedQuestions
-                    _questions.value = fetchedQuestions
-                }
-            } catch (e: Exception) {
-                Log.e("Firestore", "Offline/Fetch error", e)
-                _questions.value = emptyList()
-            }
-        }
-    }
 
     //this is the third version   server first than cache
     fun loadQuestionsForCompany(companyId: String) {
@@ -364,26 +269,7 @@ class HomeViewModel(private val user: FirebaseUser?) : ViewModel() {
     }
     }
 
-    fun calculateProgressStat()
-    {
-        viewModelScope.launch{
-            try {
-                user?.let {
-                    val doc = FirebaseFirestore.getInstance()
-                        .collection("users")
-                        .document(it.uid)
-                        .get()
-                        .await()
 
-                    val total = doc.getLong("total")?.toInt() ?: 21
-                    _totalSolved.value = total
-                }
-            } catch (e: Exception) {
-                Log.e("Firestore", "Error fetching user's total questions", e)
-            }
-
-        }
-    }
 
 
 

@@ -15,6 +15,7 @@ object UserPreferences {
 
     val questionsStatusKey = stringPreferencesKey("questions_status_json")
     val username = stringPreferencesKey("name")
+    val uidata = stringPreferencesKey("uiddataa")
     val companydata = stringPreferencesKey("companydata")
 
     suspend fun saveQuestionsStatus(context: Context, statusMap: Map<String, Boolean>) {
@@ -50,6 +51,18 @@ object UserPreferences {
     fun getUserName(context: Context): Flow<String?> {
         return context.dataStore.data.map { preferences ->
             preferences[username]
+        }
+    }
+
+    suspend fun storeuid(context: Context, name: String) {
+        context.dataStore.edit { prefs ->
+            prefs[uidata] = name
+        }
+    }
+
+    fun getUseruide(context: Context): Flow<String?> {
+        return context.dataStore.data.map { preferences ->
+            preferences[uidata]
         }
     }
 

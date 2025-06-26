@@ -105,6 +105,17 @@ dependencies {
 
     implementation ("com.airbnb.android:lottie-compose:6.1.0")
 
+    //cometchat
+    // CometChat
+    implementation(libs.cometchat.ui.kit)
+
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
+
+
 
 
 

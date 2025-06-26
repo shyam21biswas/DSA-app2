@@ -2,5 +2,6 @@
 <resources>
 
     <style name="Theme.DSAAdmin" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="YourAppParentTheme" parent="CometChatTheme.DayNight"/>
 
 </resources>

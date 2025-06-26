@@ -18,6 +18,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") } // ✅ Add this
+        maven("https://dl.cloudsmith.io/public/cometchat/cometchat/maven/")
     }
 }
 
